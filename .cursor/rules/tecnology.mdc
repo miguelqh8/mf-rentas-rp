@@ -1,0 +1,93 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+Este es un proyecto de microfrontend (mf-rentas-rp) desarrollado con Vue 3, TypeScript, Pinia, Vue Router y Single-SPA. Se integra como parte de una arquitectura de microfrontends para el sistema de gestión de Rentas de Riesgo Profesional del Portal de Sistemas de Interseguro.
+
+**Tecnologías principales:**
+- Vue 3 con Composition API
+- TypeScript 4.5.5
+- Pinia para gestión de estado
+- Vue Router 4.2.0 para enrutamiento
+- Single-SPA 2.1.0 para integración de microfrontends
+- SCSS para estilos
+- ESLint + Prettier para calidad de código
+
+**Configuración:**
+- Puerto de desarrollo: 8087
+- Soporte para modo standalone y modo integrado
+- Configuración CORS para desarrollo
+
+La estructura del proyecto es la siguiente:
+mf-rentas-rp/
+│
+├── src/                      # Código fuente de la aplicación
+│   ├── @types/               # Definiciones de tipos TypeScript
+│   │   └── index.d.ts        # Tipos globales de la aplicación
+│   │
+│   ├── assets/               # Recursos estáticos
+│   │   ├── fondo.svg         # Imagen de fondo
+│   │   └── styles/           # Estilos globales
+│   │       ├── global.scss   # Estilos globales SCSS
+│   │       └── variables.scss # Variables de diseño SCSS
+│   │
+│   ├── components/           # Componentes Vue reutilizables
+│   │   ├── ModalAgregarBeneficiario.vue
+│   │   ├── ModalConfirmacion.vue
+│   │   └── ModalSeleccionCotizacion.vue
+│   │
+│   ├── composables/          # Composables de Vue 3 (lógica reutilizable)
+│   │   └── useBuscarPersona.ts
+│   │
+│   ├── layouts/              # Layouts de la aplicación
+│   │   └── BaseLayout.vue    # Layout base principal
+│   │
+│   ├── routes/               # Configuración de rutas
+│   │   └── index.ts          # Definición de rutas de Vue Router
+│   │
+│   ├── services/             # Servicios para comunicación con APIs
+│   │   └── personaService.ts # Servicio para gestión de personas
+│   │
+│   ├── store/                # Estado global con Pinia
+│   │   ├── index.ts          # Configuración principal de Pinia
+│   │   └── personaStore.ts   # Store específico para personas
+│   │
+│   ├── types/                # Definiciones de tipos de dominio
+│   │   └── persona.ts        # Tipos relacionados con personas
+│   │
+│   ├── utils/                # Utilidades y funciones auxiliares
+│   │   └── mock-module.ts    # Módulo para datos de prueba
+│   │
+│   ├── views/                # Componentes de vista/páginas
+│   │   ├── BuscarPersonaView.vue
+│   │   ├── CotizacionView.vue
+│   │   └── DetalleAfiliadoView.vue
+│   │
+│   ├── App.vue               # Componente raíz de la aplicación
+│   ├── main.ts               # Punto de entrada principal con lógica Single-SPA
+│   ├── README.md             # Documentación específica del código fuente
+│   └── shims-vue.d.ts        # Definiciones para archivos .vue
+│
+├── deployments/              # Configuraciones de despliegue
+│   └── nginx/                # Configuración de Nginx
+│       └── nginx.conf        # Archivo de configuración de Nginx
+│
+├── dist/                     # Archivos compilados para producción
+│   ├── css/                  # Estilos compilados
+│   ├── js/                   # JavaScript compilado
+│   ├── favicon.ico           # Icono de la aplicación
+│   └── index.html            # HTML principal
+│
+├── public/                   # Archivos públicos estáticos
+│   ├── favicon.ico           # Icono de la aplicación
+│   └── index.html            # Template HTML base
+│
+├── .eslintrc.js              # Configuración de ESLint
+├── .gitignore                # Archivos ignorados por Git
+├── babel.config.js           # Configuración de Babel
+├── Dockerfile                # Configuración para contenerización con Docker
+├── package.json              # Dependencias y scripts del proyecto
+├── README.md                 # Documentación principal del proyecto
+├── tsconfig.json             # Configuración de TypeScript
+└── vue.config.js             # Configuración de Vue CLI con CORS

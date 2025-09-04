@@ -1,0 +1,77 @@
+// Importar variables globales
+@import './variables.scss';
+
+// Estilos globales base
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Omnes', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+// Clases utilitarias globales
+.text-primary {
+  color: var(--color-primary) !important;
+}
+
+.text-secondary {
+  color: var(--color-secondary) !important;
+}
+
+.text-muted {
+  color: var(--color-text-muted) !important;
+}
+
+.bg-primary {
+  background-color: var(--color-primary) !important;
+}
+
+.bg-secondary {
+  background-color: var(--color-secondary) !important;
+}
+
+.border-primary {
+  border-color: var(--color-primary) !important;
+}
+
+.shadow-sm {
+  box-shadow: var(--shadow-sm) !important;
+}
+
+.shadow-md {
+  box-shadow: var(--shadow-md) !important;
+}
+
+.shadow-lg {
+  box-shadow: var(--shadow-lg) !important;
+}
+
+// Transiciones suaves para todos los elementos interactivos
+button, input, select, textarea, a {
+  transition: var(--transition-normal);
+}
+
+// Reset de estilos para elementos de formulario
+input, select, textarea {
+  font-family: inherit;
+}
+
+button {
+  font-family: inherit;
+  cursor: pointer;
+}
+
+// Estilos para links
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
