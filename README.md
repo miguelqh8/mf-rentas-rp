@@ -1,6 +1,6 @@
 # mf-rentas-rp
 
-Microfrontend para el sistema de gestión de Rentas de Riesgo Profesional del Portal de Sistemas de Interseguro.
+Microfrontend para el sistema de gestión de Rentas Particulares del Portal de Sistemas de Interseguro.
 
 ## 🎯 Descripción
 
