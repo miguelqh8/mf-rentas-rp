@@ -4,7 +4,7 @@ Microfrontend para el sistema de gestión de Rentas Particulares del Portal de S
 
 ## 🎯 Descripción
 
-Este microfrontend permite gestionar y consultar información relacionada con las rentas de riesgo profesional, incluyendo beneficiarios, pagos y reportes.
+Este microfrontend permite gestionar y consultar información relacionada con las rentas particulares, incluyendo beneficiarios, pagos y reportes.
 
 ## 🛠️ Tecnologías
 
