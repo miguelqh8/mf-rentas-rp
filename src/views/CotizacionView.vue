@@ -98,43 +98,52 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(fila, index) in filasCotizacion" :key="index">
+              <tr v-if="!hayCotizaciones" class="no-data">
+                <td colspan="9">Aún no se tienen cotizaciones registradas</td>
+              </tr>
+              <tr v-for="(fila, index) in filasCotizacion" :key="index" 
+                  class="tabla-fila"
+                  :class="{ 'fila-nueva': fila.esNueva }"
+                  :style="{ 'animation-delay': `${index * 0.1}s` }">
                 <td>{{ 3876892 + index }}</td>
                 <td>
-                  <select class="mini-select">
+                  <select class="mini-select" v-model="fila.moneda">
                     <option>Nominal</option>
                     <option>Real</option>
                   </select>
                 </td>
                 <td>
-                  <select class="mini-select">
+                  <select class="mini-select" v-model="fila.plazo">
                     <option>5</option>
                     <option>10</option>
                     <option>15</option>
                   </select>
                 </td>
                 <td>
-                  <select class="mini-select">
-                    <option>{{ index === 0 ? '1' : '0' }}</option>
+                  <select class="mini-select" v-model="fila.anosDif">
+                    <option>0</option>
+                    <option>1</option>
                   </select>
                 </td>
                 <td>
-                  <select class="mini-select">
-                    <option>{{ index === 0 ? '1' : '0' }}</option>
+                  <select class="mini-select" v-model="fila.anosEsc">
+                    <option>0</option>
+                    <option>1</option>
                   </select>
                 </td>
                 <td>
-                  <select class="mini-select">
-                    <option>{{ index === 0 ? '200%' : '100%' }}</option>
+                  <select class="mini-select" v-model="fila.porcentajeTramo1">
+                    <option>100%</option>
+                    <option>200%</option>
                   </select>
                 </td>
                 <td>
-                  <select class="mini-select">
+                  <select class="mini-select" v-model="fila.porcentajeDevol">
                     <option>0%</option>
                   </select>
                 </td>
                 <td>
-                  <select class="mini-select">
+                  <select class="mini-select" v-model="fila.dcom">
                     <option>0%</option>
                   </select>
                 </td>
@@ -161,11 +170,17 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(fila, index) in filasCotizacion" :key="index">
-                <td>{{ index === 0 ? '2,886.03' : '-' }}</td>
-                <td>{{ index === 0 ? '1,443.02' : '-' }}</td>
-                <td>{{ index === 0 ? '5.88' : '-' }}</td>
-                <td>{{ index === 0 ? '300,000' : '-' }}</td>
+              <tr v-if="!hayCotizaciones" class="no-data">
+                <td colspan="6">Aún no se tienen cotizaciones registradas</td>
+              </tr>
+              <tr v-for="(fila, index) in filasCotizacion" :key="index"
+                  class="tabla-fila"
+                  :class="{ 'fila-nueva': fila.esNueva }"
+                  :style="{ 'animation-delay': `${index * 0.1}s` }">
+                <td>{{ fila.rentaTramo1 || '-' }}</td>
+                <td>{{ fila.rentaMens || '-' }}</td>
+                <td>{{ fila.tasa || '-' }}</td>
+                <td>{{ fila.devolucion || '-' }}</td>
                 <td>
                   <input type="radio" :name="`selec-${index}`" class="radio-select">
                 </td>
@@ -180,11 +195,11 @@
       <div class="form-actions">
         <div class="pagination-controls">
           <input type="number" v-model="paginaActual" class="input-pagination" min="1" />
-          <button class="btn-add-rows">Agregar filas</button>
+          <button class="btn-add-rows" @click="agregarFilas">Agregar filas</button>
         </div>
 
         <div class="action-controls">
-          <button class="btn-calcular">
+          <button class="btn-calcular" @click="calcularYGuardar">
             📊 Calcular y guardar
           </button>
         </div>
@@ -198,6 +213,21 @@ import { defineComponent, ref, computed } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { usePersonaStore } from '@/store/personaStore';
 
+interface FilaCotizacion {
+  esNueva?: boolean;
+  moneda?: string;
+  plazo?: string;
+  anosDif?: string;
+  anosEsc?: string;
+  porcentajeTramo1?: string;
+  porcentajeDevol?: string;
+  dcom?: string;
+  rentaTramo1?: string;
+  rentaMens?: string;
+  tasa?: string;
+  devolucion?: string;
+}
+
 export default defineComponent({
   name: 'CotizacionView',
   setup() {
@@ -208,9 +238,10 @@ export default defineComponent({
     const afiliado = computed(() => personaStore.afiliadoActual);
     const cotizacionId = ref(route.params.id || 'IFP_415736');
     const destacada = ref(false);
-    const hayCotizaciones = ref(true);
-    const filasCotizacion = ref(Array(7).fill({})); // 7 filas como en la imagen
+    const hayCotizaciones = ref(false);
+    const filasCotizacion = ref<FilaCotizacion[]>([]); // Empieza vacía
     const paginaActual = ref(1);
+    const datosCalculados = ref(false); // Controla si se han calculado los datos
 
     const formData = ref({
       moneda: 'S/',
@@ -242,6 +273,62 @@ export default defineComponent({
       destacada.value = !destacada.value;
     };
 
+    const agregarFilas = () => {
+      const numeroFilas = paginaActual.value;
+      if (numeroFilas && numeroFilas > 0) {
+        // Crear nuevas filas con valores predeterminados y marcador de animación
+        for (let i = 0; i < numeroFilas; i++) {
+          filasCotizacion.value.push({ 
+            esNueva: true,
+            moneda: 'Nominal',
+            plazo: '5',
+            anosDif: '0',
+            anosEsc: '0',
+            porcentajeTramo1: '100%',
+            porcentajeDevol: '0%',
+            dcom: '0%',
+            rentaTramo1: null,
+            rentaMens: null,
+            tasa: null,
+            devolucion: null
+          });
+        }
+        hayCotizaciones.value = true;
+        
+        // Remover la clase de animación después de que termine
+        setTimeout(() => {
+          filasCotizacion.value.forEach((fila: FilaCotizacion) => {
+            if (fila.esNueva) {
+              fila.esNueva = false;
+            }
+          });
+        }, numeroFilas * 100 + 500); // Tiempo suficiente para todas las animaciones
+        
+        // Resetear el input después de agregar
+        paginaActual.value = 1;
+      }
+    };
+
+    const calcularYGuardar = () => {
+      // Simular cálculos y llenar los datos de la segunda tabla
+      filasCotizacion.value.forEach((fila, index) => {
+        if (index === 0) {
+          // Primera fila con datos calculados
+          fila.rentaTramo1 = '2,886.03';
+          fila.rentaMens = '1,443.02';
+          fila.tasa = '5.88';
+          fila.devolucion = '300,000';
+        } else {
+          // Otras filas con guiones
+          fila.rentaTramo1 = '-';
+          fila.rentaMens = '-';
+          fila.tasa = '-';
+          fila.devolucion = '-';
+        }
+      });
+      datosCalculados.value = true;
+    };
+
     return {
       cotizacionId,
       afiliadoNombre,
@@ -253,8 +340,11 @@ export default defineComponent({
       filasCotizacion,
       paginaActual,
       formData,
+      datosCalculados,
       volverACotizaciones,
-      toggleDestacada
+      toggleDestacada,
+      agregarFilas,
+      calcularYGuardar
     };
   }
 });
@@ -606,6 +696,32 @@ export default defineComponent({
   .radio-select {
     transform: scale(1.2);
     cursor: pointer;
+  }
+
+  // Animaciones para las filas nuevas
+  .tabla-fila {
+    opacity: 1;
+    transform: translateY(0);
+    transition: all 0.3s ease-out;
+    
+    &.fila-nueva {
+      animation: fadeDownToUp 0.6s ease-out forwards;
+    }
+  }
+
+  @keyframes fadeDownToUp {
+    0% {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    50% {
+      opacity: 0.7;
+      transform: translateY(-5px);
+    }
+    100% {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
 
   .form-actions {
