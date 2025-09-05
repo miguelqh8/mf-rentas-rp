@@ -1,7 +1,7 @@
 <template>
   <div class="modal-overlay" v-if="visible" @click="closeModal">
     <div class="modal-content" @click.stop>
-      <h2>Agregar un nuevo beneficiario</h2>
+      <h2>{{ beneficiarioAEditar ? 'Editar beneficiario' : 'Agregar un nuevo beneficiario' }}</h2>
       
       <form @submit.prevent="handleSubmit" class="beneficiario-form">
         <!-- Nombres -->
@@ -10,7 +10,7 @@
           <input 
             type="text" 
             v-model="form.nombres" 
-            placeholder="CARLOS RAUL"
+            placeholder="Nombres"
             required
           />
         </div>
@@ -21,7 +21,7 @@
           <input 
             type="text" 
             v-model="form.apellidoPaterno" 
-            placeholder="ARAMBULO"
+            placeholder="Apellido Paterno"
             required
           />
         </div>
@@ -32,7 +32,7 @@
           <input 
             type="text" 
             v-model="form.apellidoMaterno" 
-            placeholder="HERRAN"
+            placeholder="Apellido Materno"
             required
           />
         </div>
@@ -44,7 +44,6 @@
             <select v-model="form.tipoDocumento" required>
               <option value="DNI">DNI</option>
               <option value="CE">CE</option>
-              <option value="PASSPORT">PASSPORT</option>
             </select>
           </div>
           <div class="form-group">
@@ -52,7 +51,7 @@
             <input 
               type="text" 
               v-model="form.numeroDocumento" 
-              placeholder="977695564"
+              placeholder="Número de documento"
               required
             />
           </div>
@@ -104,7 +103,7 @@
           <input 
             type="text" 
             v-model="form.residencia" 
-            placeholder="LIMA"
+            placeholder="Residencia"
             required
           />
         </div>
@@ -146,7 +145,7 @@
           <input 
             type="text" 
             v-model="form.profesion" 
-            placeholder="DESCONOC."
+            placeholder="Profesión"
             required
           />
         </div>
@@ -166,7 +165,7 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
+import { defineComponent, ref, computed, watch } from 'vue';
 import type { NuevoBeneficiario } from '@/types/persona';
 
 export default defineComponent({
@@ -175,6 +174,10 @@ export default defineComponent({
     visible: {
       type: Boolean,
       default: false
+    },
+    beneficiarioAEditar: {
+      type: Object,
+      default: null
     }
   },
   emits: ['close', 'save'],
@@ -235,6 +238,41 @@ export default defineComponent({
       }
     };
 
+    // Función para convertir fecha de DD/MM/YYYY a YYYY-MM-DD
+    const convertirFechaParaInput = (fechaTabla: string) => {
+      const [day, month, year] = fechaTabla.split('/');
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    };
+
+    // Watcher para cargar datos cuando se pasa un beneficiario a editar
+    watch(() => props.beneficiarioAEditar, (beneficiario) => {
+      if (beneficiario) {
+        // Separar el nombre completo
+        const nombresCompletos = beneficiario.apellidosNombres.split(' ');
+        const apellidoPaterno = nombresCompletos[0] || '';
+        const apellidoMaterno = nombresCompletos[1] || '';
+        const nombres = nombresCompletos.slice(2).join(' ') || '';
+        
+        form.value = {
+          nombres: nombres,
+          apellidoPaterno: apellidoPaterno,
+          apellidoMaterno: apellidoMaterno,
+          tipoDocumento: beneficiario.dni ? 'DNI' : 'CE',
+          numeroDocumento: beneficiario.dni,
+          parentesco: beneficiario.parentesco,
+          sexo: beneficiario.sexo,
+          fechaNacimiento: convertirFechaParaInput(beneficiario.fechaNacimiento),
+          nacionalidad: 'Peruano',
+          residencia: '',
+          esPep: 'no',
+          esSujetoObligado: 'no',
+          profesion: ''
+        };
+      } else {
+        resetForm();
+      }
+    }, { immediate: true });
+
     return {
       form,
       isFormValid,
@@ -290,8 +328,10 @@ export default defineComponent({
       margin-bottom: var(--spacing-sm);
       font-family: 'Omnes', sans-serif;
       font-weight: 500;
-      font-size: 0.9rem;
-      color: var(--color-text);
+      font-size: 14px;
+      line-height: 22px;
+      letter-spacing: 2%;
+      color: #9C9C9C;
     }
 
     input, select {
@@ -358,6 +398,7 @@ export default defineComponent({
         input[type="radio"] {
           width: auto;
           margin: 0;
+          accent-color: var(--color-primary);
         }
 
         span {
@@ -370,10 +411,8 @@ export default defineComponent({
   .form-actions {
     display: flex;
     gap: var(--spacing-lg);
-    justify-content: flex-end;
+    justify-content: center;
     margin-top: var(--spacing-4xl);
-    padding-top: var(--spacing-xl);
-    border-top: 1px solid var(--color-border);
 
     @media (max-width: 768px) {
       flex-direction: column-reverse;

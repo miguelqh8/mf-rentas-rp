@@ -21,6 +21,11 @@ const routes = [
               name: "Cotizacion",
               component: () => import("@/views/CotizacionView.vue"),
             },
+            {
+              path: "/cotizacion/:id/paso-2",
+              name: "CotizacionPaso2",
+              component: () => import("@/views/CotizacionPaso2View.vue"),
+            },
       // Aquí se agregarán más rutas futuras
       // {
       //   path: "/buscar-nombre",

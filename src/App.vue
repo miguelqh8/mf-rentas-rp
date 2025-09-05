@@ -1,5 +1,6 @@
 <template>
   <router-view />
+  <GlobalLoader />
 </template>
 
 <script lang="ts">

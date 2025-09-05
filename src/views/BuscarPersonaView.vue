@@ -40,15 +40,32 @@
         <a href="#" @click="handleBuscarPorNombre">Buscar por nombre y apellido</a>
       </div>
     </div>
+    
+    <!-- Modales de error específicos -->
+    <ModalClienteNoEnCartera 
+      :isVisible="showModalNoEnCartera" 
+      @close="showModalNoEnCartera = false" 
+    />
+    <ModalClienteOtroAsesor 
+      :isVisible="showModalOtroAsesor" 
+      @close="showModalOtroAsesor = false" 
+    />
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent } from "vue";
+import { defineComponent, ref } from "vue";
 import { useBuscarPersona } from "@/composables/useBuscarPersona";
+import { useLoader } from "@/composables/useLoader";
+import ModalClienteNoEnCartera from "@/components/ModalClienteNoEnCartera.vue";
+import ModalClienteOtroAsesor from "@/components/ModalClienteOtroAsesor.vue";
 
 export default defineComponent({
   name: "BuscarPersonaView",
+  components: {
+    ModalClienteNoEnCartera,
+    ModalClienteOtroAsesor
+  },
   setup() {
     const {
       tipoDocumento,
@@ -58,8 +75,32 @@ export default defineComponent({
       isLoading
     } = useBuscarPersona();
     
-    const handleBuscar = () => {
-      buscarPersona();
+    const { withLoader } = useLoader();
+    
+    // Variables para controlar los modales
+    const showModalNoEnCartera = ref(false);
+    const showModalOtroAsesor = ref(false);
+    
+    const handleBuscar = async () => {
+      // Verificar casos específicos antes de hacer la búsqueda
+      if (numeroDocumento.value === '87654321') {
+        showModalNoEnCartera.value = true;
+        return;
+      }
+      
+      if (numeroDocumento.value === '88888888') {
+        showModalOtroAsesor.value = true;
+        return;
+      }
+      
+      // Búsqueda normal para otros casos
+      await withLoader(
+        () => buscarPersona(),
+        { 
+          overlay: true,
+          minDuration: 800 // Duración mínima para mejor UX
+        }
+      );
     };
     
     const handleBuscarPorNombre = () => {
@@ -71,7 +112,9 @@ export default defineComponent({
       numeroDocumento,
       handleBuscar,
       handleBuscarPorNombre,
-      isLoading
+      isLoading,
+      showModalNoEnCartera,
+      showModalOtroAsesor
     };
   },
 });

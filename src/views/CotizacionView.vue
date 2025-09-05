@@ -47,7 +47,7 @@
         </div>
         
         <button class="btn-descargar">
-          📄 Descargar PDF
+          🖨️ Descargar PDF
         </button>
       </div>
 
@@ -63,7 +63,7 @@
         <div class="form-row">
           <div class="form-group">
             <label>Moneda</label>
-            <select v-model="formData.moneda">
+            <select v-model="formData.moneda" @change="manejarCambioMoneda">
               <option value="S/">S/</option>
               <option value="US$">US$</option>
             </select>
@@ -148,8 +148,8 @@
                   </select>
                 </td>
                 <td class="opciones-cell">
-                  <button class="btn-icon">📋</button>
-                  <button class="btn-icon btn-delete">🗑️</button>
+                  <button class="btn-icon" title="Copiar">📄</button>
+                  <button class="btn-icon btn-delete" title="Eliminar">🗑️</button>
                 </td>
               </tr>
             </tbody>
@@ -198,20 +198,69 @@
           <button class="btn-add-rows" @click="agregarFilas">Agregar filas</button>
         </div>
 
-        <div class="action-controls">
-          <button class="btn-calcular" @click="calcularYGuardar">
-            📊 Calcular y guardar
+        <div class="action-controls" v-if="hayCotizaciones">
+          <button 
+            class="btn-calcular" 
+            :class="{ 'btn-guardado': datosCalculados }"
+            @click="calcularYGuardar"
+            :disabled="datosCalculados">
+            <span v-if="datosCalculados">✓ Cambios guardados</span>
+            <span v-else>📊 Calcular y guardar</span>
           </button>
         </div>
+      </div>
+
+      <!-- Botones adicionales de navegación -->
+      <div class="navigation-actions" v-if="datosCalculados">
+        <div class="step-navigation">
+          <button class="btn-siguiente-paso" @click="irAlSiguientePaso">
+            Siguiente paso: Elegir beneficiarios
+          </button>
+          <button class="btn-cerrar-cotizacion" :disabled="!datosCalculados">
+            Cerrar cotización
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de confirmación cambio de moneda -->
+  <div class="modal-overlay" v-if="mostrarModalMoneda" @click="cancelarCambioMoneda">
+    <div class="modal-content" @click.stop>
+      <div class="modal-icon">
+        <div class="icon-circle warning">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none">
+            <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" 
+                  stroke="currentColor" 
+                  stroke-width="2" 
+                  stroke-linecap="round" 
+                  stroke-linejoin="round"/>
+          </svg>
+        </div>
+      </div>
+      
+      <div class="modal-body">
+        <h2>¿Estás seguro de cambiar la moneda?</h2>
+        <p>Todas las cotizaciones en moneda distinta ajustada cambiarán a nominal</p>
+      </div>
+      
+      <div class="modal-actions">
+        <button class="btn-secondary" @click="cancelarCambioMoneda">
+          No
+        </button>
+        <button class="btn-primary" @click="confirmarCambioMoneda">
+          Sí, continuar
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script lang="ts">
-import { defineComponent, ref, computed } from 'vue';
+import { defineComponent, ref, computed, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { usePersonaStore } from '@/store/personaStore';
+import { useLoader } from '@/composables/useLoader';
 
 interface FilaCotizacion {
   esNueva?: boolean;
@@ -234,6 +283,7 @@ export default defineComponent({
     const router = useRouter();
     const route = useRoute();
     const personaStore = usePersonaStore();
+    const { withLoader } = useLoader();
 
     const afiliado = computed(() => personaStore.afiliadoActual);
     const cotizacionId = ref(route.params.id || 'IFP_415736');
@@ -242,6 +292,9 @@ export default defineComponent({
     const filasCotizacion = ref<FilaCotizacion[]>([]); // Empieza vacía
     const paginaActual = ref(1);
     const datosCalculados = ref(false); // Controla si se han calculado los datos
+    const mostrarModalMoneda = ref(false);
+    const monedaAnterior = ref('S/');
+    const nuevaMoneda = ref('S/');
 
     const formData = ref({
       moneda: 'S/',
@@ -287,13 +340,14 @@ export default defineComponent({
             porcentajeTramo1: '100%',
             porcentajeDevol: '0%',
             dcom: '0%',
-            rentaTramo1: null,
-            rentaMens: null,
-            tasa: null,
-            devolucion: null
+            rentaTramo1: undefined,
+            rentaMens: undefined,
+            tasa: undefined,
+            devolucion: undefined
           });
         }
         hayCotizaciones.value = true;
+        datosCalculados.value = false; // Resetear estado de cálculo
         
         // Remover la clase de animación después de que termine
         setTimeout(() => {
@@ -309,25 +363,79 @@ export default defineComponent({
       }
     };
 
-    const calcularYGuardar = () => {
-      // Simular cálculos y llenar los datos de la segunda tabla
-      filasCotizacion.value.forEach((fila, index) => {
-        if (index === 0) {
-          // Primera fila con datos calculados
-          fila.rentaTramo1 = '2,886.03';
-          fila.rentaMens = '1,443.02';
-          fila.tasa = '5.88';
-          fila.devolucion = '300,000';
-        } else {
-          // Otras filas con guiones
-          fila.rentaTramo1 = '-';
-          fila.rentaMens = '-';
-          fila.tasa = '-';
-          fila.devolucion = '-';
+    const calcularYGuardar = async () => {
+      await withLoader(
+        async () => {
+          // Simular tiempo de cálculo
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          // Simular cálculos y llenar los datos de la segunda tabla
+          filasCotizacion.value.forEach((fila, index) => {
+            if (index === 0) {
+              // Primera fila con datos calculados
+              fila.rentaTramo1 = '2,886.03';
+              fila.rentaMens = '1,443.02';
+              fila.tasa = '5.88';
+              fila.devolucion = '300,000';
+            } else {
+              // Otras filas con guiones
+              fila.rentaTramo1 = '-';
+              fila.rentaMens = '-';
+              fila.tasa = '-';
+              fila.devolucion = '-';
+            }
+          });
+          datosCalculados.value = true;
+        },
+        {
+          overlay: true,
+          minDuration: 800
         }
-      });
-      datosCalculados.value = true;
+      );
     };
+
+    const irAlSiguientePaso = () => {
+      router.push(`/cotizacion/${cotizacionId.value}/paso-2`);
+    };
+
+    const manejarCambioMoneda = (event: Event) => {
+      const target = event.target as HTMLSelectElement;
+      const valorSeleccionado = target.value;
+      
+      if (valorSeleccionado !== monedaAnterior.value) {
+        nuevaMoneda.value = valorSeleccionado;
+        mostrarModalMoneda.value = true;
+        // Revertir temporalmente el cambio
+        formData.value.moneda = monedaAnterior.value;
+      }
+    };
+
+    const confirmarCambioMoneda = () => {
+      formData.value.moneda = nuevaMoneda.value;
+      monedaAnterior.value = nuevaMoneda.value;
+      mostrarModalMoneda.value = false;
+      
+      // Resetear datos calculados si hay cambio de moneda
+      if (datosCalculados.value) {
+        datosCalculados.value = false;
+      }
+    };
+
+    const cancelarCambioMoneda = () => {
+      mostrarModalMoneda.value = false;
+      // El select ya está en el valor anterior
+    };
+
+    // Watcher para detectar cambios en las filas y resetear el estado
+    watch(
+      filasCotizacion,
+      () => {
+        if (datosCalculados.value) {
+          datosCalculados.value = false;
+        }
+      },
+      { deep: true }
+    );
 
     return {
       cotizacionId,
@@ -344,7 +452,12 @@ export default defineComponent({
       volverACotizaciones,
       toggleDestacada,
       agregarFilas,
-      calcularYGuardar
+      calcularYGuardar,
+      irAlSiguientePaso,
+      mostrarModalMoneda,
+      manejarCambioMoneda,
+      confirmarCambioMoneda,
+      cancelarCambioMoneda
     };
   }
 });
@@ -410,7 +523,7 @@ export default defineComponent({
       transition: var(--transition-normal);
 
       &.active {
-        color: var(--color-warning);
+        color: var(--color-primary);
       }
 
       &:hover {
@@ -426,8 +539,11 @@ export default defineComponent({
       margin: 0;
       font-family: 'Omnes', sans-serif;
       font-weight: 500;
-      font-size: 1.2rem;
-      color: var(--color-text-light);
+      font-style: medium;
+      font-size: 16px;
+      line-height: 120%;
+      letter-spacing: 0%;
+      color: #454A6C;
     }
   }
 
@@ -534,7 +650,7 @@ export default defineComponent({
 
     .form-row {
       display: grid;
-      grid-template-columns: 150px 250px;
+      grid-template-columns: 80px 250px;
       gap: var(--spacing-xl);
 
       .form-group {
@@ -696,6 +812,7 @@ export default defineComponent({
   .radio-select {
     transform: scale(1.2);
     cursor: pointer;
+    accent-color: var(--color-primary);
   }
 
   // Animaciones para las filas nuevas
@@ -782,6 +899,56 @@ export default defineComponent({
         display: flex;
         align-items: center;
         gap: var(--spacing-sm);
+        transition: var(--transition-normal);
+
+        &:hover:not(:disabled) {
+          background-color: var(--color-primary-dark);
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-md);
+        }
+
+        &.btn-guardado {
+          background-color: #9CA3AF;
+          color: var(--color-white);
+          cursor: default;
+
+          &:hover {
+            background-color: #9CA3AF;
+            transform: none;
+            box-shadow: none;
+          }
+        }
+
+        &:disabled {
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+  // Botones de navegación adicionales
+  .navigation-actions {
+    margin-top: var(--spacing-4xl);
+    padding-top: var(--spacing-3xl);
+    border-top: 1px solid var(--color-border-light);
+
+    .step-navigation {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: var(--spacing-md);
+
+      .btn-siguiente-paso {
+        padding: var(--spacing-md) var(--spacing-xl);
+        background-color: var(--color-primary);
+        color: var(--color-white);
+        border: none;
+        border-radius: var(--radius-md);
+        font-family: 'Omnes', sans-serif;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: var(--transition-normal);
 
         &:hover {
           background-color: var(--color-primary-dark);
@@ -789,6 +956,154 @@ export default defineComponent({
           box-shadow: var(--shadow-md);
         }
       }
+
+      .btn-cerrar-cotizacion {
+        padding: var(--spacing-md) var(--spacing-xl);
+        background-color: #9CA3AF;
+        color: var(--color-white);
+        border: none;
+        border-radius: var(--radius-md);
+        font-family: 'Omnes', sans-serif;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: var(--transition-normal);
+
+        &:hover:not(:disabled) {
+          background-color: #6B7280;
+          transform: translateY(-1px);
+          box-shadow: var(--shadow-sm);
+        }
+
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+      }
+    }
+  }
+
+}
+
+// Modal de confirmación cambio de moneda (fuera del contenedor principal)
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  padding: var(--spacing-lg);
+
+  .modal-content {
+    background-color: var(--color-white);
+    border-radius: var(--radius-lg);
+    padding: var(--spacing-4xl);
+    max-width: 400px;
+    width: 100%;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    animation: slideIn 0.3s ease-out;
+
+    .modal-icon {
+      margin-bottom: var(--spacing-xl);
+
+      .icon-circle {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto;
+        animation: pulse 2s infinite;
+        
+        &.warning {
+          background-color: #FEF3CD;
+          color: #F59E0B;
+        }
+      }
+    }
+
+    .modal-body {
+      margin-bottom: var(--spacing-4xl);
+
+      h2 {
+        font-family: 'Omnes', sans-serif;
+        font-weight: 600;
+        font-size: 1.3rem;
+        color: var(--color-text);
+        margin-bottom: var(--spacing-lg);
+        line-height: 1.2;
+      }
+
+      p {
+        font-family: 'Omnes', sans-serif;
+        font-size: 0.9rem;
+        color: var(--color-text-light);
+        line-height: 1.4;
+        margin: 0;
+      }
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: var(--spacing-lg);
+      justify-content: center;
+
+      button {
+        padding: var(--spacing-md) var(--spacing-xl);
+        border: none;
+        border-radius: var(--radius-md);
+        font-family: 'Omnes', sans-serif;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+        transition: var(--transition-normal);
+        min-width: 100px;
+
+        &.btn-secondary {
+          background-color: var(--color-gray-light);
+          color: var(--color-text);
+
+          &:hover {
+            background-color: #E5E7EB;
+          }
+        }
+
+        &.btn-primary {
+          background-color: var(--color-primary);
+          color: var(--color-white);
+
+          &:hover {
+            background-color: var(--color-primary-dark);
+          }
+        }
+      }
+    }
+  }
+
+  @keyframes slideIn {
+    from {
+      opacity: 0;
+      transform: translateY(-20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes pulse {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.05);
     }
   }
 }
@@ -824,6 +1139,24 @@ export default defineComponent({
 
       .buttons-group {
         align-items: center;
+      }
+    }
+
+    .navigation-actions {
+      .step-navigation {
+        flex-direction: column;
+        text-align: center;
+        gap: var(--spacing-lg);
+
+        .btn-siguiente-paso {
+          order: 1;
+          width: 100%;
+        }
+
+        .btn-cerrar-cotizacion {
+          order: 2;
+          width: 100%;
+        }
       }
     }
   }

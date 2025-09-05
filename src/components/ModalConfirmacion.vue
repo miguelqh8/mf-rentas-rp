@@ -135,6 +135,7 @@ export default defineComponent({
     height: 64px;
     margin: 0 auto var(--spacing-xl);
     color: var(--color-success);
+    animation: pulse 2s infinite;
     
     svg {
       width: 100%;
@@ -216,6 +217,15 @@ export default defineComponent({
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
   }
 }
 

@@ -2,9 +2,17 @@ import { createApp } from "vue";
 import router from "./routes";
 import { store } from "./store";
 import App from "./App.vue";
+import BaseLoader from "./components/BaseLoader.vue";
+import GlobalLoader from "./components/GlobalLoader.vue";
 import "./assets/styles/global.scss";
 
 console.log('🚀 Iniciando aplicación Rentas RP...');
+
+// Función helper para configurar componentes globales
+function setupGlobalComponents(app: any) {
+  app.component('BaseLoader', BaseLoader);
+  app.component('GlobalLoader', GlobalLoader);
+}
 
 // Verificar si estamos en modo standalone
 const isStandalone = !window.singleSpaNavigate || 
@@ -19,6 +27,7 @@ if (isStandalone) {
   const app = createApp(App);
   app.use(router);
   app.use(store);
+  setupGlobalComponents(app);
   app.mount('#app');
   console.log('✅ Aplicación montada en modo standalone');
 } else {
@@ -40,6 +49,7 @@ if (isStandalone) {
       handleInstance(app) {
         app.use(router);
         app.use(store);
+        setupGlobalComponents(app);
       },
     });
 
@@ -55,6 +65,7 @@ if (isStandalone) {
     const app = createApp(App);
     app.use(router);
     app.use(store);
+    setupGlobalComponents(app);
     app.mount('#app');
     console.log('✅ Fallback: aplicación montada en modo standalone');
   });

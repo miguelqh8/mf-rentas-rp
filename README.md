@@ -1,10 +1,10 @@
 # mf-rentas-rp
 
-Microfrontend para el sistema de gestión de Rentas Particulares del Portal de Sistemas de Interseguro.
+Microfrontend para el sistema de gestión de Rentas Particulares (RP) del Portal de Sistemas de Interseguro.
 
 ## 🎯 Descripción
 
-Este microfrontend permite gestionar y consultar información relacionada con las rentas particulares, incluyendo beneficiarios, pagos y reportes.
+Este microfrontend permite gestionar y consultar información relacionada con las rentas particulares, incluyendo búsqueda de personas, gestión de beneficiarios, cotizaciones y detalles de afiliados.
 
 ## 🛠️ Tecnologías
 
@@ -51,12 +51,25 @@ VUE_APP_ENV=development
 
 ```
 src/
-├── components/          # Componentes Vue reutilizables
-├── routes/             # Configuración de rutas
-├── assets/             # Archivos estáticos
 ├── @types/             # Definiciones de tipos TypeScript
+├── assets/             # Recursos estáticos (imágenes, estilos)
+├── components/         # Componentes Vue reutilizables
+│   ├── ModalAgregarBeneficiario.vue
+│   ├── ModalConfirmacion.vue
+│   └── ModalSeleccionCotizacion.vue
+├── composables/        # Composables de Vue 3
+├── layouts/            # Layouts de la aplicación
+├── routes/             # Configuración de rutas
+├── services/           # Servicios para comunicación con APIs
+├── store/              # Estado global con Pinia
+├── types/              # Definiciones de tipos de dominio
+├── utils/              # Utilidades y funciones auxiliares
+├── views/              # Componentes de vista/páginas
+│   ├── BuscarPersonaView.vue
+│   ├── CotizacionView.vue
+│   └── DetalleAfiliadoView.vue
 ├── App.vue             # Componente principal
-└── main.ts             # Punto de entrada
+└── main.ts             # Punto de entrada con lógica Single-SPA
 ```
 
 ## 🔗 Integración
@@ -65,7 +78,7 @@ Este microfrontend se integra en el Portal de Sistemas a través de:
 
 1. **Root Config**: Configuración de rutas en `/rentas-rp`
 2. **Layout**: Uso del layout común del portal
-3. **Aplicaciones**: Aparece listado en el módulo de aplicaciones
+3. **Aplicaciones**: Aparece listado en el módulo de aplicaciones de Rentas Particulares
 
 ## 🎨 Características
 

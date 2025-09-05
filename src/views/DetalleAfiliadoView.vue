@@ -7,10 +7,12 @@
       </button>
     </div>
 
-    <transition name="fade">
-      <div class="afiliado-card" v-if="afiliado && activeTab === 'datos'">
-        <div class="info-grid">
-          <div class="info-group">
+    <!-- Datos principales siempre visibles -->
+    <div class="afiliado-card" v-if="afiliado">
+      <div class="info-layout">
+        <!-- Datos principales (izquierda) -->
+        <div class="info-main">
+          <div class="info-row">
             <div class="info-item">
               <label>Nombres</label>
               <span>{{ afiliado.nombres }}</span>
@@ -25,7 +27,7 @@
             </div>
           </div>
 
-          <div class="info-group">
+          <div class="info-row">
             <div class="info-item">
               <label>Sexo</label>
               <span>{{ afiliado.sexo }}</span>
@@ -40,7 +42,7 @@
             </div>
           </div>
 
-          <div class="info-group">
+          <div class="info-row">
             <div class="info-item">
               <label>DNI</label>
               <span>{{ afiliado.dni }}</span>
@@ -54,16 +56,17 @@
               <span>{{ formatearFecha(afiliado.fechaNacimiento) }}</span>
             </div>
           </div>
+        </div>
 
-          <div class="info-group consentimientos">
-            <div class="info-item">
-              <label>Consentimientos aceptados:</label>
-              <span>{{ afiliado.consentimientosAceptados }}</span>
-            </div>
+        <!-- Consentimientos (derecha) -->
+        <div class="info-sidebar">
+          <div class="info-item">
+            <label>Consentimientos aceptados:</label>
+            <span>{{ afiliado.consentimientosAceptados }}</span>
           </div>
         </div>
       </div>
-    </transition>
+    </div>
 
     <div class="error-message" v-if="!afiliado">
       <p>No se encontraron datos del afiliado</p>
@@ -222,7 +225,13 @@
                 <td>{{ cotizacion.fechaVigencia }}</td>
                 <td>{{ cotizacion.moneda }}</td>
                 <td>{{ cotizacion.primaUnica }}</td>
-                <td>{{ cotizacion.estado }}</td>
+                <td class="estado-cell">
+                  <span v-if="cotizacion.estado === 'En proceso'" class="estado-badge en-proceso">
+                    <span class="estado-icon">🕐</span>
+                    {{ cotizacion.estado }}
+                  </span>
+                  <span v-else>{{ cotizacion.estado }}</span>
+                </td>
                 <td class="destacada-cell">
                   <button 
                     class="btn-star" 
@@ -233,7 +242,27 @@
                   </button>
                 </td>
                 <td class="action-cell">
-                  <button class="btn-action">⋯</button>
+                  <div class="action-menu-container" :class="{ 'active': menuAbierto === cotizacion.id }">
+                    <button 
+                      class="btn-action" 
+                      @click="toggleMenu(cotizacion.id)"
+                      @blur="cerrarMenu"
+                    >
+                      <div class="dots-icon">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                      </div>
+                    </button>
+                    <div class="context-menu" v-if="menuAbierto === cotizacion.id">
+                      <div class="menu-item" @click="continuarCierre(cotizacion.id)">
+                        Continuar cierre
+                      </div>
+                      <div class="menu-item menu-item-danger" @click="eliminarCotizacion(cotizacion.id)">
+                        Eliminar
+                      </div>
+                    </div>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -287,7 +316,7 @@
                   <button class="btn-delete" @click="eliminarBeneficiario(beneficiario.id)">
                     🗑️
                   </button>
-                  <button class="btn-edit-beneficiario">
+                  <button class="btn-edit-beneficiario" @click="editarBeneficiario(beneficiario)">
                     ✏️
                   </button>
                 </td>
@@ -302,8 +331,9 @@
     <!-- Modal Agregar Beneficiario -->
     <ModalAgregarBeneficiario 
       :visible="showModalBeneficiario" 
+      :beneficiario-a-editar="beneficiarioAEditar"
       @close="cerrarModalBeneficiario"
-      @save="agregarBeneficiario"
+      @save="guardarBeneficiario"
     />
 
     <!-- Modal Confirmación -->
@@ -328,6 +358,7 @@
 import { defineComponent, computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { usePersonaStore } from "@/store/personaStore";
+import { useLoader } from "@/composables/useLoader";
 import ModalAgregarBeneficiario from "@/components/ModalAgregarBeneficiario.vue";
 import ModalConfirmacion from "@/components/ModalConfirmacion.vue";
 import ModalSeleccionCotizacion from "@/components/ModalSeleccionCotizacion.vue";
@@ -343,6 +374,7 @@ export default defineComponent({
   setup() {
     const router = useRouter();
     const personaStore = usePersonaStore();
+    const { withLoader } = useLoader();
     
     const afiliado = computed(() => personaStore.afiliadoActual);
     const activeTab = ref('datos');
@@ -405,6 +437,8 @@ export default defineComponent({
     const showModalBeneficiario = ref(false);
     const showModalConfirmacion = ref(false);
     const showModalCotizacion = ref(false);
+    const beneficiarioAEditar = ref<Beneficiario | null>(null);
+    const menuAbierto = ref<number | null>(null);
 
     // Datos de cotizaciones
     const cotizaciones = ref([
@@ -429,7 +463,7 @@ export default defineComponent({
         fechaVigencia: '12/07/2025',
         moneda: 'S/',
         primaUnica: '300,000.00',
-        estado: '-',
+        estado: 'En proceso',
         destacada: false
       },
       {
@@ -474,6 +508,7 @@ export default defineComponent({
 
     const cerrarModalBeneficiario = () => {
       showModalBeneficiario.value = false;
+      beneficiarioAEditar.value = null;
     };
 
     const agregarBeneficiario = (datosNuevoBeneficiario: NuevoBeneficiario) => {
@@ -495,6 +530,42 @@ export default defineComponent({
       // Convierte de YYYY-MM-DD a DD/MM/YYYY
       const [year, month, day] = fechaISO.split('-');
       return `${day}/${month}/${year}`;
+    };
+
+    const editarBeneficiario = (beneficiario: Beneficiario) => {
+      beneficiarioAEditar.value = beneficiario;
+      showModalBeneficiario.value = true;
+    };
+
+    const guardarBeneficiario = async (datosNuevoBeneficiario: NuevoBeneficiario) => {
+      await withLoader(
+        async () => {
+          // Simular una operación asíncrona (como guardar en el backend)
+          await new Promise(resolve => setTimeout(resolve, 1500));
+          
+          if (beneficiarioAEditar.value) {
+            // Modo edición: actualizar beneficiario existente
+            const index = beneficiarios.value.findIndex(b => b.id === beneficiarioAEditar.value!.id);
+            if (index !== -1) {
+              beneficiarios.value[index] = {
+                ...beneficiarios.value[index],
+                apellidosNombres: `${datosNuevoBeneficiario.apellidoPaterno} ${datosNuevoBeneficiario.apellidoMaterno} ${datosNuevoBeneficiario.nombres}`,
+                parentesco: datosNuevoBeneficiario.parentesco,
+                sexo: datosNuevoBeneficiario.sexo,
+                fechaNacimiento: formatearFechaParaTabla(datosNuevoBeneficiario.fechaNacimiento),
+                dni: datosNuevoBeneficiario.numeroDocumento
+              };
+            }
+          } else {
+            // Modo agregar: crear nuevo beneficiario
+            agregarBeneficiario(datosNuevoBeneficiario);
+          }
+        },
+        { 
+          overlay: true,
+          minDuration: 800
+        }
+      );
     };
 
     // Funciones del modal de confirmación
@@ -558,6 +629,34 @@ export default defineComponent({
     const irACotizacion = (solicitudId: string) => {
       router.push(`/cotizacion/${solicitudId}`);
     };
+
+    // Funciones del menú contextual
+    const toggleMenu = (cotizacionId: number) => {
+      menuAbierto.value = menuAbierto.value === cotizacionId ? null : cotizacionId;
+    };
+
+    const cerrarMenu = () => {
+      // Usamos un pequeño delay para permitir que el click en el menu item se ejecute
+      setTimeout(() => {
+        menuAbierto.value = null;
+      }, 150);
+    };
+
+    const continuarCierre = (cotizacionId: number) => {
+      console.log('Continuar cierre de cotización:', cotizacionId);
+      // Aquí iría la lógica para continuar el cierre
+      menuAbierto.value = null;
+    };
+
+    const eliminarCotizacion = (cotizacionId: number) => {
+      console.log('Eliminar cotización:', cotizacionId);
+      // Aquí iría la lógica para eliminar la cotización
+      const index = cotizaciones.value.findIndex(c => c.id === cotizacionId);
+      if (index !== -1) {
+        cotizaciones.value.splice(index, 1);
+      }
+      menuAbierto.value = null;
+    };
     
     return {
       afiliado,
@@ -578,12 +677,20 @@ export default defineComponent({
       abrirModalBeneficiario,
       cerrarModalBeneficiario,
       agregarBeneficiario,
+      editarBeneficiario,
+      guardarBeneficiario,
+      beneficiarioAEditar,
       guardarCambios,
       cerrarModalConfirmacion,
       abrirModalCotizacion,
       cerrarModalCotizacion,
       crearNuevaCotizacion,
-      irACotizacion
+      irACotizacion,
+      menuAbierto,
+      toggleMenu,
+      cerrarMenu,
+      continuarCierre,
+      eliminarCotizacion
     };
   },
 });
@@ -604,7 +711,7 @@ export default defineComponent({
       font-size: 22px;
       line-height: 120%;
       letter-spacing: 0%;
-      color: #333;
+      color: #454A6C;
     }
   }
 
@@ -642,22 +749,27 @@ export default defineComponent({
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   }
 
-  .info-grid {
-    display: grid;
-    gap: 30px;
+  .info-layout {
+    display: flex;
+    gap: var(--spacing-4xl);
+    align-items: flex-start;
   }
 
-  .info-group {
+  .info-main {
+    flex: 1;
+    max-width: 60%;
+  }
+
+  .info-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-    gap: 20px;
-    
-    &.consentimientos {
-      grid-template-columns: 1fr;
-      border-top: 1px solid #eee;
-      padding-top: 20px;
-      margin-top: 10px;
-    }
+    grid-template-columns: repeat(3, minmax(150px, 200px));
+    gap: var(--spacing-xl);
+    margin-bottom: var(--spacing-lg);
+  }
+
+  .info-sidebar {
+    flex: 0 0 280px;
+    min-width: 280px;
   }
 
   .info-item {
@@ -669,17 +781,23 @@ export default defineComponent({
       font-family: 'Omnes', sans-serif;
       font-weight: 500;
       font-size: 14px;
-      color: #666;
+      line-height: 22px;
+      letter-spacing: 2%;
+      vertical-align: middle;
+      color: #9C9C9C;
       margin-bottom: 2px;
     }
     
     span {
       font-family: 'Omnes', sans-serif;
-      font-weight: 400;
-      font-size: 16px;
-      color: #333;
-      padding: 8px 0;
-      border-bottom: 1px solid #f0f0f0;
+      font-weight: 500;
+      font-style: medium;
+      font-size: 14px;
+      line-height: 22px;
+      letter-spacing: 2%;
+      vertical-align: middle;
+      color: #46474B;
+      padding: 4px 0;
     }
   }
 
@@ -717,10 +835,15 @@ export default defineComponent({
     background-color: #f8f9fa;
     border: none;
     border-bottom: 3px solid transparent;
-    font-family: 'Omnes', sans-serif;
-    font-weight: 500;
-    font-size: 14px;
-    color: #666;
+    font-family: 'Helvetica Neue', sans-serif;
+    font-weight: 700;
+    font-size: 11px;
+    line-height: 16px;
+    letter-spacing: 5%;
+    text-align: center;
+    vertical-align: middle;
+    text-transform: uppercase;
+    color: #0855C4;
     cursor: pointer;
     transition: all 0.3s ease;
     
@@ -745,7 +868,7 @@ export default defineComponent({
 
   // Mensaje de consentimiento
   .consent-message {
-    background-color: #4A67C7;
+    background-color: var(--color-primary);
     color: white;
     padding: 20px;
     border-radius: 8px;
@@ -812,7 +935,10 @@ export default defineComponent({
           font-family: 'Omnes', sans-serif;
           font-weight: 500;
           font-size: 14px;
-          color: #333;
+          line-height: 22px;
+          letter-spacing: 2%;
+          vertical-align: middle;
+          color: #9C9C9C;
         }
         
         input {
@@ -1250,6 +1376,28 @@ export default defineComponent({
     }
   }
 
+  .estado-cell {
+    .estado-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-xs);
+      padding: var(--spacing-xs) var(--spacing-md);
+      border-radius: var(--radius-md);
+      font-size: 0.8rem;
+      font-weight: 500;
+      font-family: 'Omnes', sans-serif;
+      
+      &.en-proceso {
+        background-color: var(--color-primary);
+        color: white;
+        
+        .estado-icon {
+          font-size: 0.9rem;
+        }
+      }
+    }
+  }
+
   .destacada-cell {
     text-align: center;
     
@@ -1276,21 +1424,145 @@ export default defineComponent({
 
   .action-cell {
     text-align: center;
+    position: relative;
+    
+    .action-menu-container {
+      position: relative;
+      display: inline-block;
+    }
     
     .btn-action {
       background: none;
       border: none;
-      font-size: 1.2rem;
       cursor: pointer;
-      padding: 4px 8px;
-      border-radius: 4px;
-      color: #666;
-      transition: background-color 0.2s ease;
+      padding: 8px;
+      transition: var(--transition-normal);
       
-      &:hover {
-        background-color: #f8f9fa;
-        color: #333;
+      .dots-icon {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 2px solid var(--color-primary);
+        background-color: transparent;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 3px;
+        transition: var(--transition-normal);
+        
+        span {
+          width: 4px;
+          height: 4px;
+          border-radius: 50%;
+          background-color: var(--color-primary);
+          display: block;
+        }
       }
+      
+      &:hover .dots-icon {
+        background-color: var(--color-primary);
+        
+        span {
+          background-color: white;
+        }
+      }
+    }
+    
+    .context-menu {
+      position: absolute;
+      bottom: 100%;
+      right: 0;
+      background-color: var(--color-white);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-lg);
+      z-index: 1000;
+      min-width: 120px;
+      animation: fadeInUp 0.2s ease-out;
+      
+      .menu-item {
+          padding: var(--spacing-md) var(--spacing-lg);
+          cursor: pointer;
+          font-family: 'Omnes', sans-serif;
+          font-size: 0.9rem;
+          color: var(--color-text);
+          transition: var(--transition-normal);
+          border-bottom: 1px solid var(--color-border);
+          
+          &:hover {
+            background-color: var(--color-gray-light);
+          }
+          
+          &:last-child {
+            border-bottom: none;
+          }
+          
+          &:first-child {
+            border-radius: var(--radius-md) var(--radius-md) 0 0;
+          }
+          
+          &:last-child {
+            border-radius: 0 0 var(--radius-md) var(--radius-md);
+          }
+          
+          &:only-child {
+            border-radius: var(--radius-md);
+          }
+          
+          &.menu-item-danger {
+            color: var(--color-danger);
+            
+            &:hover {
+              background-color: #fee;
+              color: #dc2626;
+            }
+          }
+        }
+    }
+  }
+
+  // Animaciones para el menú contextual
+  @keyframes fadeInDown {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeInUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  // Responsive para pantallas medianas
+  @media (max-width: 1024px) {
+    .info-layout {
+      flex-direction: column;
+      gap: var(--spacing-xl);
+    }
+    
+    .info-main {
+      max-width: 100%;
+    }
+    
+    .info-row {
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-lg);
+    }
+    
+    .info-sidebar {
+      flex: none;
+      min-width: auto;
     }
   }
 
@@ -1339,6 +1611,25 @@ export default defineComponent({
     
     .address-input {
       flex-direction: column;
+    }
+    
+    .info-layout {
+      flex-direction: column;
+      gap: var(--spacing-xl);
+    }
+    
+    .info-main {
+      max-width: 100%;
+    }
+    
+    .info-row {
+      grid-template-columns: 1fr;
+      gap: var(--spacing-lg);
+    }
+    
+    .info-sidebar {
+      flex: none;
+      min-width: auto;
     }
     
     .grupo-familiar-header {
