@@ -1,14 +1,20 @@
 <template>
   <div class="detalle-afiliado-view">
+    <!-- Título y botón en la misma línea -->
     <div class="header-section">
-      <h1>Resultado de búsqueda</h1>
-      <button @click="nuevaBusqueda" class="btn-nueva-busqueda">
-        🔍 Nueva búsqueda
+      <h1 class="page-title">Resultado de búsqueda</h1>
+      <button 
+        @click="nuevaBusqueda" 
+        class="nueva-busqueda-btn"
+      >
+        <MagnifyingGlassIcon class="heroicon" />
+        Nueva búsqueda
       </button>
     </div>
 
     <!-- Datos principales siempre visibles -->
-    <div class="afiliado-card" v-if="afiliado">
+    <Card v-if="afiliado" class="afiliado-card">
+      <template #content>
       <div class="info-layout">
         <!-- Datos principales (izquierda) -->
         <div class="info-main">
@@ -44,16 +50,8 @@
 
           <div class="info-row">
             <div class="info-item">
-              <label>DNI</label>
-              <span>{{ afiliado.dni }}</span>
-            </div>
-            <div class="info-item">
               <label>Categoría</label>
               <span>{{ afiliado.categoria }}</span>
-            </div>
-            <div class="info-item">
-              <label>Fecha de nacimiento</label>
-              <span>{{ formatearFecha(afiliado.fechaNacimiento) }}</span>
             </div>
           </div>
         </div>
@@ -66,130 +64,140 @@
           </div>
         </div>
       </div>
-    </div>
+      </template>
+    </Card>
 
-    <div class="error-message" v-if="!afiliado">
+    <Card v-if="!afiliado" class="error-card">
+      <template #content>
+        <div class="error-message">
+          <i class="pi pi-exclamation-triangle error-icon"></i>
       <p>No se encontraron datos del afiliado</p>
-      <button @click="nuevaBusqueda" class="btn-nueva-busqueda">
-        Realizar nueva búsqueda
-      </button>
+          <Button 
+            @click="nuevaBusqueda" 
+            icon="pi pi-search"
+            label="Realizar nueva búsqueda"
+            class="p-button-primary"
+          />
     </div>
+      </template>
+    </Card>
 
     <!-- Sección de pestañas -->
     <div class="tabs-section" v-if="afiliado">
-      <div class="tabs-header">
-        <button 
-          class="tab-button"
-          :class="{ active: activeTab === 'datos' }"
-          @click="activeTab = 'datos'"
-        >
-          DATOS COMPLETOS
-        </button>
-        <button 
-          class="tab-button"
-          :class="{ active: activeTab === 'cotizaciones' }"
-          @click="activeTab = 'cotizaciones'"
-        >
-          COTIZACIONES
-        </button>
-        <button 
-          class="tab-button"
-          :class="{ active: activeTab === 'grupo' }"
-          @click="activeTab = 'grupo'"
-        >
-          GRUPO FAMILIAR
-        </button>
-      </div>
-
-      <!-- Contenido de DATOS COMPLETOS -->
-      <transition name="tab-fade" mode="out-in">
-        <div class="tab-content" v-if="activeTab === 'datos'" key="datos">
-        <!-- Mensaje de consentimiento -->
-        <div class="consent-message">
-          <div class="consent-icon">ℹ️</div>
-          <div class="consent-text">
-            <h4>Se necesita que el cliente brinde su consentimiento de llamada</h4>
-            <p>Elija un canal para enviar el enlace de solicitud:</p>
-            
-            <div class="contact-options">
-              <div class="contact-item">
-                <span class="contact-icon">📱</span>
-                <span>SMS al 936228466</span>
-              </div>
-              <div class="contact-item">
-                <span class="contact-icon">✉️</span>
-                <span>Al correo jaritza.yanayaco@gmail.com</span>
-              </div>
-              <div class="contact-item">
-                <span class="contact-icon">📲</span>
-                <span>Whatsapp 936228466</span>
-              </div>
+      <TabView v-model:activeIndex="activeTabIndex" class="main-tabs">
+        <TabPanel header="DATOS COMPLETOS">
+          <!-- Mensaje informativo -->
+          <div class="info-message">
+            <div class="info-icon">
+              <span class="exclamation-icon">!</span>
             </div>
+            <span>Estos datos pueden editarse únicamente en VTiger</span>
           </div>
-        </div>
 
-        <!-- Formulario de datos -->
-        <div class="form-section">
-          <div class="form-grid">
-            <div class="form-group">
-              <label>Correo electrónico</label>
-              <input type="email" v-model="datosCompletos.email" placeholder="carlmarita@hotmail.com" />
-            </div>
-            <div class="form-group">
-              <label>Rango de inversión (referencial)</label>
-              <input type="text" v-model="datosCompletos.rangoInversion" placeholder="650,000" />
-            </div>
-            <div class="form-group">
-              <label>Celular</label>
-              <input type="tel" v-model="datosCompletos.celular" placeholder="977695564" />
-            </div>
-            <div class="form-group">
-              <label>Celular adicional</label>
-              <input type="tel" v-model="datosCompletos.celularAdicional" placeholder="Ingrese número" />
-            </div>
-            <div class="form-group form-group-full">
-              <label>Centro laboral</label>
-              <input type="text" v-model="datosCompletos.centroLaboral" placeholder="Ingrese centro laboral" />
-            </div>
-            <div class="form-group form-group-full">
-              <label>Dirección</label>
-              <div class="address-input">
-                <input 
-                  type="text" 
-                  v-model="datosCompletos.direccion" 
-                  placeholder="Calle Conde de la Vega del Ren 130, Dpto 101 130, SANTIAGO DE SURCO, LIMA, LIMA"
-                  :disabled="!isEditingAddress"
+          <!-- Formulario de datos completos -->
+          <div class="datos-completos-form">
+            <div class="form-row">
+              <div class="form-field">
+                <label>Nombres</label>
+                <span class="field-value">{{ toUpperCaseSafe(afiliado?.nombres || 'MARIA LOURDES') }}</span>
+              </div>
+              
+              <div class="form-field">
+                <label>Apellido paterno</label>
+                <span class="field-value">{{ toUpperCaseSafe(afiliado?.apellidoPaterno || 'LÓPEZ') }}</span>
+              </div>
+              
+              <div class="form-field">
+                <label>Apellido materno</label>
+                <span class="field-value">{{ toUpperCaseSafe(afiliado?.apellidoMaterno || 'BRAVO DE RUEDA') }}</span>
+              </div>
+              
+              <div class="form-field">
+                <label>DNI</label>
+                <span class="field-value">{{ toUpperCaseSafe('07854509') }}</span>
+              </div>
+              
+              <div class="form-field">
+                <label>Fecha de nacimiento</label>
+                <span class="field-value">{{ toUpperCaseSafe('17/02/1936') }}</span>
+              </div>
+              
+              <div class="form-field">
+                <label>Estado civil</label>
+                <span class="field-value">{{ toUpperCaseSafe(afiliado?.estadoCivil || 'SOLTERO') }}</span>
+              </div>
+              
+              <div class="form-field">
+                <label>Sexo</label>
+                <span class="field-value">{{ toUpperCaseSafe(afiliado?.sexo || 'FEMENINO') }}</span>
+              </div>
+              
+              <div class="form-field">
+                <label>Nacionalidad</label>
+                <span class="field-value">{{ toUpperCaseSafe('Peruano') }}</span>
+              </div>
+              
+              <div class="form-field">
+                <label>Residencia</label>
+                <span class="field-value">{{ toUpperCaseSafe('LIMA') }}</span>
+              </div>
+              
+              <div class="form-field">
+                <label>Dirección</label>
+                <span class="field-value">{{ toUpperCaseSafe(null) }}</span>
+              </div>
+              
+              <div class="form-field">
+                <label>Correo electrónico</label>
+                <span class="field-value">{{ toUpperCaseSafe('carlmarita@hotmail.com') }}</span>
+              </div>
+              
+              <div class="form-field">
+                <label>Celular</label>
+                <span class="field-value">{{ toUpperCaseSafe('977695564') }}</span>
+              </div>
+              
+              <div class="form-field">
+                <label>Celular 2 (opcional)</label>
+                <span class="field-value">{{ toUpperCaseSafe('977695430') }}</span>
+              </div>
+              
+              <div class="form-field">
+                <label>Centro laboral</label>
+                <span class="field-value">{{ toUpperCaseSafe(null) }}</span>
+              </div>
+              
+              <div class="form-field form-field-vertical">
+                <label>Rango de inversión (referencial)</label>
+                <InputText 
+                  v-model="rangoInversion" 
+                  placeholder="350,000"
+                  class="editable-field"
                 />
-                <button class="btn-editar" @click="toggleEditAddress">
-                  {{ isEditingAddress ? '💾 Guardar' : '✏️ Editar' }}
-                </button>
               </div>
             </div>
-          </div>
 
-          <div class="form-actions">
-            <button 
-              class="btn-guardar" 
-              :class="{ 'active': hasChanges }"
-              :disabled="!hasChanges"
-              @click="guardarCambios"
-            >
-              Guardar cambios
-            </button>
-            <button class="btn-danger">🗑️ Descartar cambios</button>
+            <div class="form-actions">
+              <Button 
+                label="Guardar cambios" 
+                class="btn-guardar-cambios"
+                :disabled="!rangoInversionCambiado"
+                :class="{ 'btn-disabled': !rangoInversionCambiado }"
+              />
+            </div>
           </div>
-        </div>
-        </div>
-      </transition>
+        </TabPanel>
 
-      <!-- Contenido de COTIZACIONES -->
-      <transition name="tab-fade" mode="out-in">
-        <div class="tab-content" v-if="activeTab === 'cotizaciones'" key="cotizaciones">
+        <TabPanel header="COTIZACIONES">
         <div class="cotizaciones-header">
           <h3>Ingreso flexible plus</h3>
-          <button class="btn-nueva-cotizacion" @click="abrirModalCotizacion">
-            Nueva cotización ➕
-          </button>
+          <Button 
+            @click="abrirModalCotizacion"
+            icon="pi pi-plus"
+            label="Nueva cotización"
+            class="p-button-success"
+            size="small"
+          />
         </div>
 
         <div class="cotizaciones-subtitle">
@@ -268,17 +276,19 @@
             </tbody>
           </table>
         </div>
-        </div>
-      </transition>
+        
+        </TabPanel>
 
-      <!-- Contenido de GRUPO FAMILIAR -->
-      <transition name="tab-fade" mode="out-in">
-        <div class="tab-content" v-if="activeTab === 'grupo'" key="grupo">
+        <TabPanel header="GRUPO FAMILIAR">
         <div class="grupo-familiar-header">
           <h3>Beneficiarios del grupo familiar</h3>
-          <button class="btn-agregar-beneficiario" @click="abrirModalBeneficiario">
-            ➕ Agregar beneficiario
-          </button>
+          <Button 
+            @click="abrirModalBeneficiario"
+            icon="pi pi-plus"
+            label="Agregar beneficiario"
+            class="p-button-success"
+            size="small"
+          />
         </div>
 
         <div class="beneficiarios-table">
@@ -324,8 +334,9 @@
             </tbody>
           </table>
         </div>
-        </div>
-      </transition>
+        
+        </TabPanel>
+      </TabView>
     </div>
 
     <!-- Modal Agregar Beneficiario -->
@@ -359,6 +370,7 @@ import { defineComponent, computed, ref } from "vue";
 import { useRouter } from "vue-router";
 import { usePersonaStore } from "@/store/personaStore";
 import { useLoader } from "@/composables/useLoader";
+import { MagnifyingGlassIcon } from "@heroicons/vue/24/outline";
 import ModalAgregarBeneficiario from "@/components/ModalAgregarBeneficiario.vue";
 import ModalConfirmacion from "@/components/ModalConfirmacion.vue";
 import ModalSeleccionCotizacion from "@/components/ModalSeleccionCotizacion.vue";
@@ -367,6 +379,7 @@ import type { Beneficiario, NuevoBeneficiario } from "@/types/persona";
 export default defineComponent({
   name: "DetalleAfiliadoView",
   components: {
+    MagnifyingGlassIcon,
     ModalAgregarBeneficiario,
     ModalConfirmacion,
     ModalSeleccionCotizacion
@@ -377,7 +390,22 @@ export default defineComponent({
     const { withLoader } = useLoader();
     
     const afiliado = computed(() => personaStore.afiliadoActual);
-    const activeTab = ref('datos');
+    const activeTabIndex = ref(0);
+    const rangoInversion = ref('350,000');
+    const rangoInversionOriginal = ref('350,000');
+
+    // Helper function para convertir a mayúsculas de forma segura
+    const toUpperCaseSafe = (value: any): string => {
+      if (value === null || value === undefined || value === '') {
+        return '-';
+      }
+      return String(value).toUpperCase();
+    };
+
+    // Computed para verificar si el rango de inversión ha cambiado
+    const rangoInversionCambiado = computed(() => {
+      return rangoInversion.value !== rangoInversionOriginal.value;
+    });
     
     // Datos del formulario
     const datosCompletos = ref({
@@ -658,9 +686,12 @@ export default defineComponent({
       menuAbierto.value = null;
     };
     
-    return {
-      afiliado,
-      activeTab,
+        return {
+          afiliado,
+          activeTabIndex,
+          rangoInversion,
+          rangoInversionCambiado,
+          toUpperCaseSafe,
       datosCompletos,
       hasChanges,
       isEditingAddress,
@@ -698,23 +729,336 @@ export default defineComponent({
 
 <style lang="scss" scoped>
 .detalle-afiliado-view {
-  .header-section {
+  min-height: 100vh;
+  background-color: var(--color-background);
     display: flex;
-    justify-content: space-between;
+  flex-direction: column;
     align-items: center;
-    margin: 0 30px 30px 30px;
     
-    h1 {
+      /* Título con los mismos estilos que BuscarPersonaView */
+      .page-title {
       margin: 0;
+        padding: 0;
       font-family: 'Omnes', sans-serif;
       font-weight: 600;
-      font-size: 22px;
-      line-height: 120%;
-      letter-spacing: 0%;
+        font-size: 1.25rem;
+        line-height: 1.3;
       color: #454A6C;
+        text-align: left;
+        flex: 1;
+      }
+  
+      .header-section {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        width: calc(100% - var(--spacing-lg, 16px) * 2);
+        max-width: 1400px;
+        padding: var(--spacing-lg, 16px) 0 var(--spacing-md, 12px);
+        margin: 0 var(--spacing-lg, 16px) var(--spacing-md, 12px);
+      }
+  
+  /* Estilos del botón Nueva búsqueda */
+  .nueva-busqueda-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: #ffffff;
+    border: 1px solid #0855C4;
+    color: #0855C4;
+    font-family: 'Omnes', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 500;
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+    transform: translateY(0);
+    
+    /* Efecto de onda/ripple */
+    &::before {
+      content: '';
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 0;
+      height: 0;
+      border-radius: 50%;
+      background: rgba(8, 85, 196, 0.1);
+      transition: width 0.6s, height 0.6s;
+      transform: translate(-50%, -50%);
+      z-index: 0;
+    }
+    
+    &:hover {
+      background: #f0f7ff;
+      border-color: #073f9a;
+      color: #073f9a;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(8, 85, 196, 0.25);
+      
+      &::before {
+        width: 120px;
+        height: 120px;
+      }
+    }
+    
+    &:active {
+      transform: translateY(-1px);
+      transition: all 0.1s ease;
+      animation: pulseBlue 0.3s ease;
+    }
+    
+    &:focus {
+      outline: none;
+      box-shadow: 0 0 0 2px rgba(8, 85, 196, 0.2), 0 4px 12px rgba(8, 85, 196, 0.15);
+    }
+    
+    /* Estilos para el icono de Heroicons */
+    .heroicon {
+      width: 1rem;
+      height: 1rem;
+      margin-right: 0.5rem;
+      color: inherit;
+      stroke-width: 2;
+      position: relative;
+      z-index: 1;
+    }
+    
+    /* Asegurar que el texto esté en primer plano */
+    & > *:not(.heroicon) {
+      position: relative;
+      z-index: 1;
     }
   }
+  
+  @keyframes pulseBlue {
+    0% {
+      transform: translateY(-2px) scale(1);
+    }
+    50% {
+      transform: translateY(-1px) scale(0.98);
+    }
+    100% {
+      transform: translateY(-1px) scale(1);
+    }
+  }
+  
+  // Estilos para PrimeVue components
+  .afiliado-card {
+    width: calc(100% - var(--spacing-lg, 16px) * 2);
+    max-width: 1400px;
+    margin: 0 var(--spacing-lg, 16px) var(--spacing-lg, 16px);
+    border-radius: var(--radius-md, 6px);
+    box-shadow: var(--shadow-sm);
 
+    :deep(.p-card-body) {
+      padding: var(--spacing-lg, 16px) var(--spacing-md, 12px);
+      border-radius: var(--radius-md, 6px);
+    }
+  }
+  
+  .error-card {
+    width: calc(100% - var(--spacing-lg, 16px) * 2);
+    max-width: 1400px;
+    margin: 0 var(--spacing-lg, 16px) var(--spacing-lg, 16px);
+    
+    .error-message {
+      text-align: center;
+      padding: 20px;
+      
+      .error-icon {
+        font-size: 2rem;
+        color: #dc2626;
+        margin-bottom: 1rem;
+      }
+      
+      p {
+        margin: 0 0 20px 0;
+        color: #6b7280;
+        font-family: 'Omnes', sans-serif;
+      }
+    }
+  }
+  
+  .tabs-section {
+    width: calc(100% - var(--spacing-lg, 16px) * 2);
+    max-width: 1400px;
+    margin: 0 var(--spacing-lg, 16px);
+    
+        .main-tabs {
+          :deep(.p-tabview-nav) {
+            background: transparent;
+            border: none;
+            padding: 0;
+            display: inline-flex;
+            gap: 12px;
+            margin-bottom: -1px;
+            position: relative;
+            z-index: 2;
+
+            .p-tabview-nav-link {
+              font-family: 'Omnes', sans-serif;
+              font-weight: 500;
+              font-size: 14px;
+              color: #6b7280;
+              background: #f8f9fa;
+              border: 1px solid #dee2e6;
+              border-radius: 6px 6px 0 0;
+              border-bottom: 1px solid #dee2e6;
+              padding: 12px 24px;
+              margin: 0;
+              text-decoration: none;
+              transition: all 0.3s ease;
+              white-space: nowrap;
+              position: relative;
+
+              &:hover {
+                background: #e9ecef;
+                color: #495057;
+              }
+
+              &.p-highlight {
+                color: #0855C4 !important;
+                background: white !important;
+                border-color: #dee2e6 !important;
+                border-bottom: 1px solid white !important;
+                z-index: 3;
+                position: relative;
+                font-weight: 700 !important;
+                
+                /* Crear una línea blanca que cubra el borde del panel */
+                &::after {
+                  content: '';
+                  position: absolute;
+                  bottom: -1px;
+                  left: 0;
+                  right: 0;
+                  height: 1px;
+                  background: white;
+                  z-index: 1;
+                }
+              }
+            }
+
+            /* Forzar color/peso del texto dentro del enlace del tab */
+            .p-tabview-title {
+              color: #6b7280;
+              font-weight: 500;
+            }
+            .p-highlight .p-tabview-title {
+              color: #0855C4 !important;
+              font-weight: 700 !important;
+            }
+          }
+
+          :deep(.p-tabview-panels) {
+            background: white;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 20px;
+            margin-top: 0;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+          }
+        }
+  }
+}
+
+/* Responsive igual que BuscarPersonaView */
+    /* Estilos específicos para móviles pequeños */
+    @media (max-width: 480px) {
+      .detalle-afiliado-view {
+        .page-title {
+          font-size: 1.1rem;
+        }
+
+        .header-section {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: var(--spacing-sm, 8px);
+          padding: var(--spacing-md, 12px) 0 var(--spacing-sm, 8px);
+          margin: 0 var(--spacing-md, 12px) var(--spacing-sm, 8px);
+          width: calc(100% - var(--spacing-md, 12px) * 2);
+        }
+
+    .afiliado-card,
+    .error-card,
+    .tabs-section {
+      margin: 0 var(--spacing-md, 12px) var(--spacing-md, 12px);
+      width: calc(100% - var(--spacing-md, 12px) * 2);
+    }
+
+    .afiliado-card :deep(.p-card-body) {
+      padding: var(--spacing-lg, 16px) var(--spacing-md, 12px);
+    }
+  }
+}
+
+    /* Tablet styles - 768px and up */
+    @media (min-width: 768px) {
+      .detalle-afiliado-view {
+        .page-title {
+          font-size: 1.75rem;
+        }
+
+        .header-section {
+          flex-direction: row;
+          align-items: center;
+          padding: var(--spacing-4xl, 40px) 0 var(--spacing-xl, 20px);
+          margin: 0 var(--spacing-4xl, 40px) var(--spacing-xl, 20px);
+          width: calc(100% - var(--spacing-4xl, 40px) * 2);
+          max-width: 1200px;
+        }
+
+    .afiliado-card,
+    .error-card,
+    .tabs-section {
+      margin: 0 var(--spacing-4xl, 40px) var(--spacing-4xl, 40px);
+      width: calc(100% - var(--spacing-4xl, 40px) * 2);
+      max-width: 1200px;
+    }
+  }
+}
+
+/* Desktop styles - 1024px and up */
+@media (min-width: 1024px) {
+  .detalle-afiliado-view {
+    .page-title {
+      font-size: 2rem;
+    }
+
+    .header-section {
+      max-width: 1400px;
+    }
+
+    .afiliado-card,
+    .error-card,
+    .tabs-section {
+      max-width: 1400px;
+    }
+  }
+}
+
+/* Large desktop styles - 1440px and up */
+@media (min-width: 1440px) {
+  .detalle-afiliado-view {
+    .header-section {
+      max-width: 1600px;
+    }
+
+    .afiliado-card,
+    .error-card,
+    .tabs-section {
+      max-width: 1600px;
+    }
+  }
+}
+
+.detalle-afiliado-view {
   .btn-nueva-busqueda {
     background-color: white;
     color: var(--color-secondary);
@@ -751,7 +1095,7 @@ export default defineComponent({
 
   .info-layout {
     display: flex;
-    gap: var(--spacing-4xl);
+    gap: var(--spacing-xl);
     align-items: flex-start;
   }
 
@@ -763,8 +1107,8 @@ export default defineComponent({
   .info-row {
     display: grid;
     grid-template-columns: repeat(3, minmax(150px, 200px));
-    gap: var(--spacing-xl);
-    margin-bottom: var(--spacing-lg);
+    gap: var(--spacing-md);
+    margin-bottom: var(--spacing-md);
   }
 
   .info-sidebar {
@@ -775,7 +1119,7 @@ export default defineComponent({
   .info-item {
     display: flex;
     flex-direction: column;
-    gap: 5px;
+    gap: 3px;
     
     label {
       font-family: 'Omnes', sans-serif;
@@ -1548,7 +1892,7 @@ export default defineComponent({
   @media (max-width: 1024px) {
     .info-layout {
       flex-direction: column;
-      gap: var(--spacing-xl);
+      gap: var(--spacing-md);
     }
     
     .info-main {
@@ -1557,7 +1901,7 @@ export default defineComponent({
     
     .info-row {
       grid-template-columns: repeat(2, 1fr);
-      gap: var(--spacing-lg);
+      gap: var(--spacing-sm);
     }
     
     .info-sidebar {
@@ -1615,7 +1959,7 @@ export default defineComponent({
     
     .info-layout {
       flex-direction: column;
-      gap: var(--spacing-xl);
+      gap: var(--spacing-md);
     }
     
     .info-main {
@@ -1624,7 +1968,7 @@ export default defineComponent({
     
     .info-row {
       grid-template-columns: 1fr;
-      gap: var(--spacing-lg);
+      gap: var(--spacing-sm);
     }
     
     .info-sidebar {
@@ -1669,4 +2013,174 @@ export default defineComponent({
     }
   }
 }
+
+/* Estilos para el formulario de datos completos */
+.info-message {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #e3f2fd;
+  border: 1px solid #90caf9;
+  border-radius: 6px;
+  margin-bottom: 24px;
+  font-family: 'Omnes', sans-serif;
+  font-size: 14px;
+  color: #1976d2;
+
+  .info-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 20px;
+    height: 20px;
+    background: #1976d2;
+    border-radius: 50%;
+    flex-shrink: 0;
+
+    .exclamation-icon {
+      color: white;
+      font-size: 14px;
+      font-weight: bold;
+      line-height: 1;
+    }
+  }
+}
+
+.datos-completos-form {
+  .form-row {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    margin-bottom: 0;
+  }
+
+  .form-field {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    align-items: center;
+
+    &.form-field-vertical {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 8px;
+      grid-column: 1 / -1;
+      margin-top: 20px;
+      padding-top: 16px;
+      
+      .editable-field {
+        width: 50%;
+        max-width: 300px;
+      }
+    }
+
+    label {
+      font-family: 'Omnes', sans-serif;
+      font-weight: 400;
+      font-size: 14px;
+      color: #9C9C9C;
+      margin: 0;
+      text-align: left;
+    }
+
+    .field-value {
+      font-family: 'Omnes', sans-serif;
+      font-weight: 500;
+      font-size: 14px;
+      color: #46474B;
+      background: transparent;
+      padding: 0;
+      border: none;
+      min-height: auto;
+      display: flex;
+      align-items: center;
+    }
+
+    .editable-field {
+      font-family: 'Omnes', sans-serif;
+      font-size: 14px;
+      color: #333;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      padding: 8px 12px;
+      height: 36px;
+      width: 100%;
+
+      &:focus {
+        border-color: #0855C4;
+        box-shadow: 0 0 0 2px rgba(8, 85, 196, 0.1);
+      }
+    }
+  }
+
+  .form-actions {
+    margin-top: 24px;
+
+    .btn-guardar-cambios {
+      background: #0855C4 !important;
+      border-color: #0855C4 !important;
+      color: white !important;
+      font-family: 'Omnes', sans-serif !important;
+      font-weight: 500;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border-radius: 6px;
+      padding: 0.75rem 1.5rem;
+      position: relative;
+      overflow: hidden;
+
+      &:enabled:hover {
+        background: #073f9a !important;
+        border-color: #073f9a !important;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(8, 85, 196, 0.3) !important;
+      }
+
+      &:enabled:active {
+        transform: translateY(0);
+        background: #073f9a !important;
+        border-color: #073f9a !important;
+      }
+
+      &:focus {
+        box-shadow: 0 0 0 0.2rem rgba(8, 85, 196, 0.2) !important;
+      }
+
+      &.btn-disabled {
+        background: #e5e7eb !important;
+        border-color: #e5e7eb !important;
+        color: #9ca3af !important;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+
+        &:hover {
+          background: #e5e7eb !important;
+          border-color: #e5e7eb !important;
+          transform: none;
+          box-shadow: none;
+        }
+      }
+    }
+  }
+}
+
+/* Responsive para el formulario */
+@media (max-width: 768px) {
+  .datos-completos-form .form-field {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 16px 0;
+    
+    label {
+      font-weight: 500;
+      color: #333;
+    }
+    
+    .field-value {
+      padding-left: 0;
+    }
+  }
+}
 </style>
+

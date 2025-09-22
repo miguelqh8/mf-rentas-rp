@@ -10,9 +10,7 @@ export interface Afiliado {
   sexo: Sexo;
   estadoCivil: EstadoCivil;
   edad: number;
-  dni: string;
   categoria: Categoria;
-  fechaNacimiento: string;
   consentimientosAceptados: string;
 }
 

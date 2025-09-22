@@ -9,9 +9,14 @@
         "serve:standalone": "set VUE_CLI_STANDALONE=true && vue-cli-service serve --port 8087"
     },
     "dependencies": {
+        "@heroicons/vue": "^2.2.0",
         "@portal-sistemas/shared": "file:../portal-shared",
+        "@primevue/themes": "^4.3.9",
         "core-js": "^3.8.3",
+        "floating-vue": "^2.0.0",
         "pinia": "^2.0.36",
+        "primeicons": "^6.0.1",
+        "primevue": "^3.53.1",
         "single-spa-vue": "^2.1.0",
         "vue": "^3.2.13",
         "vue-router": "^4.2.0"

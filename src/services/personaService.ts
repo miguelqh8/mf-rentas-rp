@@ -1,4 +1,4 @@
-import type { TipoDocumento, BuscarPersonaResponse } from "@/types/persona";
+import type { TipoDocumento, BuscarPersonaResponse, Categoria } from "@/types/persona";
 
 // Simulación de servicio - en el futuro se conectará a la API real
 export class PersonaService {
@@ -29,9 +29,7 @@ export class PersonaService {
           sexo: "FEMENINO",
           estadoCivil: "SOLTERO",
           edad: 79,
-          dni: "12345678",
-          categoria: "JUB. LEGAL",
-          fechaNacimiento: "12/03/1946",
+          categoria: "JUB. LEGAL" as Categoria,
           consentimientosAceptados: "Ninguno"
         }
       };

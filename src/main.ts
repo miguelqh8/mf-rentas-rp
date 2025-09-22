@@ -5,6 +5,8 @@ import App from "./App.vue";
 import BaseLoader from "./components/BaseLoader.vue";
 import GlobalLoader from "./components/GlobalLoader.vue";
 import "./assets/styles/global.scss";
+import "./assets/styles/primevue-theme.scss";
+import PrimeVue from "./plugins/primevue";
 
 console.log('🚀 Iniciando aplicación Rentas RP...');
 
@@ -12,6 +14,7 @@ console.log('🚀 Iniciando aplicación Rentas RP...');
 function setupGlobalComponents(app: any) {
   app.component('BaseLoader', BaseLoader);
   app.component('GlobalLoader', GlobalLoader);
+  app.use(PrimeVue);
 }
 
 // Verificar si estamos en modo standalone

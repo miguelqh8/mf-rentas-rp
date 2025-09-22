@@ -13,7 +13,6 @@ export function useBuscarPersona() {
   
   const buscarPersona = async () => {
     if (!numeroDocumento.value.trim()) {
-      alert("Por favor ingrese un número de documento");
       return;
     }
     
@@ -31,11 +30,9 @@ export function useBuscarPersona() {
         router.push('/detalle-afiliado');
       } else {
         personaStore.setError(response.mensaje || "Afiliado no encontrado");
-        alert(response.mensaje || "Afiliado no encontrado");
       }
     } catch (error) {
       personaStore.setError("Error al buscar afiliado");
-      alert("Error al buscar afiliado");
     } finally {
       personaStore.setLoading(false);
     }
@@ -44,7 +41,7 @@ export function useBuscarPersona() {
   const buscarPorNombre = () => {
     // Aquí iría la lógica para buscar por nombre
     // Ejemplo: router.push('/buscar-nombre')
-    alert("Función de búsqueda por nombre y apellido");
+    console.log("Función de búsqueda por nombre y apellido");
   };
   
   return {
