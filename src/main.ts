@@ -5,8 +5,30 @@ import App from "./App.vue";
 import BaseLoader from "./components/BaseLoader.vue";
 import GlobalLoader from "./components/GlobalLoader.vue";
 import "./assets/styles/global.scss";
+import 'primevue/resources/themes/lara-light-blue/theme.css';
+import 'primevue/resources/primevue.min.css';
+import 'primeicons/primeicons.css';
 import "./assets/styles/primevue-theme.scss";
-import PrimeVue from "./plugins/primevue";
+
+// Configuración de PrimeVue igual que mf-rentas-particular
+import PrimeVue from 'primevue/config';
+import Button from 'primevue/button';
+import InputText from 'primevue/inputtext';
+import Dropdown from 'primevue/dropdown';
+import Card from 'primevue/card';
+import Dialog from 'primevue/dialog';
+import ProgressSpinner from 'primevue/progressspinner';
+import Message from 'primevue/message';
+import Toast from 'primevue/toast';
+import ConfirmDialog from 'primevue/confirmdialog';
+import TabView from 'primevue/tabview';
+import TabPanel from 'primevue/tabpanel';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import InputNumber from 'primevue/inputnumber';
+import ConfirmationService from 'primevue/confirmationservice';
+import ToastService from 'primevue/toastservice';
+import Tooltip from 'primevue/tooltip';
 
 console.log('🚀 Iniciando aplicación Rentas RP...');
 
@@ -14,7 +36,30 @@ console.log('🚀 Iniciando aplicación Rentas RP...');
 function setupGlobalComponents(app: any) {
   app.component('BaseLoader', BaseLoader);
   app.component('GlobalLoader', GlobalLoader);
+  
+  // Configurar PrimeVue igual que mf-rentas-particular
   app.use(PrimeVue);
+  app.use(ConfirmationService);
+  app.use(ToastService);
+  
+  // Registrar directivas
+  app.directive('tooltip', Tooltip);
+  
+  // Registro de componentes PrimeVue
+  app.component('Button', Button);
+  app.component('InputText', InputText);
+  app.component('Dropdown', Dropdown);
+  app.component('Card', Card);
+  app.component('Dialog', Dialog);
+  app.component('ProgressSpinner', ProgressSpinner);
+  app.component('Message', Message);
+  app.component('Toast', Toast);
+  app.component('ConfirmDialog', ConfirmDialog);
+  app.component('TabView', TabView);
+  app.component('TabPanel', TabPanel);
+  app.component('DataTable', DataTable);
+  app.component('Column', Column);
+  app.component('InputNumber', InputNumber);
 }
 
 // Verificar si estamos en modo standalone

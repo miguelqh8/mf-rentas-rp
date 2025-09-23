@@ -284,55 +284,88 @@
           <h3>Beneficiarios del grupo familiar</h3>
           <Button 
             @click="abrirModalBeneficiario"
-            icon="pi pi-plus"
-            label="Agregar beneficiario"
+            label="+ Agregar beneficiario"
             class="p-button-success"
             size="small"
           />
         </div>
 
         <div class="beneficiarios-table">
-          <table>
-            <thead>
-              <tr>
-                <th>N°</th>
-                <th>Apellidos y Nombres</th>
-                <th>Parentesco</th>
-                <th>Sexo</th>
-                <th>Fec. Nacimiento</th>
-                <th>DNI</th>
-                <th>% Renta</th>
-                <th>Acción</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr v-for="beneficiario in beneficiarios" :key="beneficiario.id">
-                <td>{{ beneficiario.numero }}</td>
-                <td>{{ beneficiario.apellidosNombres }}</td>
-                <td>{{ beneficiario.parentesco }}</td>
-                <td>{{ beneficiario.sexo }}</td>
-                <td>{{ beneficiario.fechaNacimiento }}</td>
-                <td>{{ beneficiario.dni }}</td>
-                <td>
-                  <input 
-                    type="number" 
-                    v-model="beneficiario.porcentajeRenta" 
-                    class="percentage-input"
-                    min="0" 
-                    max="100"
+          <DataTable 
+            :value="beneficiarios" 
+            class="p-datatable-sm"
+            responsiveLayout="scroll"
+            :paginator="false"
+            showGridlines
+          >
+            <Column field="numero" header="N°" style="width: 60px">
+              <template #body="{ data }">
+                <span class="numero-cell">{{ data.numero }}</span>
+              </template>
+            </Column>
+            
+            <Column field="apellidosNombres" header="Apellidos y Nombres" style="min-width: 200px">
+              <template #body="{ data }">
+                <span class="nombres-cell">{{ data.apellidosNombres }}</span>
+              </template>
+            </Column>
+            
+            <Column field="parentesco" header="Parentesco" style="width: 120px">
+              <template #body="{ data }">
+                <span class="parentesco-cell">{{ data.parentesco }}</span>
+              </template>
+            </Column>
+            
+            <Column field="sexo" header="Sexo" style="width: 100px">
+              <template #body="{ data }">
+                <span class="sexo-cell">{{ data.sexo }}</span>
+              </template>
+            </Column>
+            
+            <Column field="fechaNacimiento" header="Fec. Nacimiento" style="width: 130px">
+              <template #body="{ data }">
+                <span class="fecha-cell">{{ data.fechaNacimiento }}</span>
+              </template>
+            </Column>
+            
+            <Column field="dni" header="DNI" style="width: 100px">
+              <template #body="{ data }">
+                <span class="dni-cell">{{ data.dni }}</span>
+              </template>
+            </Column>
+            
+            <Column field="porcentajeRenta" header="% Renta" style="width: 100px">
+              <template #body="{ data }">
+                <InputNumber 
+                  v-model="data.porcentajeRenta"
+                  :min="0" 
+                  :max="100"
+                  suffix="%"
+                  class="percentage-input-prime"
+                  :useGrouping="false"
+                />
+              </template>
+            </Column>
+            
+            <Column header="Acción" style="width: 100px">
+              <template #body="{ data }">
+                <div class="actions-cell">
+                  <Button 
+                    label="🗑️" 
+                    class="p-button-danger p-button-text p-button-sm"
+                    @click="eliminarBeneficiario(data.id)"
+                    v-tooltip.top="'Eliminar'"
                   />
-                </td>
-                <td class="actions-cell">
-                  <button class="btn-delete" @click="eliminarBeneficiario(beneficiario.id)">
-                    🗑️
-                  </button>
-                  <button class="btn-edit-beneficiario" @click="editarBeneficiario(beneficiario)">
-                    ✏️
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
+                  <Button 
+                    label="✏️" 
+                    class="p-button-info p-button-text p-button-sm"
+                    @click="editarBeneficiario(data)"
+                    v-tooltip.top="'Editar'"
+                  />
+                </div>
+              </template>
+            </Column>
+          </DataTable>
         </div>
         
         </TabPanel>
@@ -1452,108 +1485,102 @@ export default defineComponent({
   .beneficiarios-table {
     overflow-x: auto;
     
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      background-color: white;
+    // Estilos para PrimeVue DataTable
+    :deep(.p-datatable) {
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      font-family: 'Omnes', sans-serif;
       
-      thead {
-        background-color: var(--color-primary);
+      .p-datatable-thead > tr > th {
+        background-color: #0855C4 !important;
+        border: none !important;
+        padding: 15px 12px !important;
+        color: white !important;
+        font-family: 'Omnes', sans-serif !important;
+        font-weight: 600 !important;
+        font-size: 0.9rem !important;
+        text-transform: uppercase !important;
+        letter-spacing: 0.5px !important;
+      }
+      
+      .p-datatable-tbody > tr {
+        transition: background-color 0.2s ease;
         
-        th {
-          padding: 15px 12px;
-          text-align: left;
-          font-family: 'Omnes', sans-serif;
-          font-weight: 600;
-          font-size: 0.9rem;
-          color: white;
-          text-transform: uppercase;
-          letter-spacing: 0.5px;
-          
-          &:first-child {
-            width: 60px;
-            text-align: center;
-          }
-          
-          &:last-child {
-            width: 100px;
-            text-align: center;
-          }
+        &:hover {
+          background-color: #f8f9fa !important;
         }
       }
       
-      tbody {
-        tr {
-          border-bottom: 1px solid #eee;
-          transition: background-color 0.2s ease;
-          
-          &:hover {
-            background-color: #f8f9fa;
-          }
-          
-          &:last-child {
-            border-bottom: none;
-          }
+      .p-datatable-tbody > tr > td {
+        padding: 12px !important;
+        font-family: 'Omnes', sans-serif !important;
+        font-size: 0.85rem !important;
+        color: #333 !important;
+        border-bottom: 1px solid #eee !important;
+      }
+    }
+    
+    // Estilos para las celdas específicas
+    .numero-cell {
+      font-weight: 600;
+      color: #0855C4;
+      text-align: center;
+      display: block;
+    }
+    
+    .nombres-cell {
+      font-weight: 500;
+    }
+    
+    .parentesco-cell, .sexo-cell, .fecha-cell, .dni-cell {
+      color: #333;
+    }
+    
+    // Estilos para InputNumber
+    :deep(.percentage-input-prime) {
+      width: 80px;
+      
+      .p-inputnumber-input {
+        text-align: center;
+        font-family: 'Omnes', sans-serif;
+        font-size: 0.85rem;
+        padding: 6px 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        
+        &:focus {
+          border-color: #0855C4;
+          box-shadow: 0 0 0 2px rgba(8, 85, 196, 0.2);
+        }
+      }
+    }
+    
+    // Estilos para acciones
+    .actions-cell {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      
+      :deep(.p-button) {
+        width: 32px;
+        height: 32px;
+        padding: 0;
+        
+        &.p-button-danger:hover {
+          background-color: #ffeaea !important;
+          border-color: #dc3545 !important;
         }
         
-        td {
-          padding: 12px;
-          font-family: 'Omnes', sans-serif;
-          font-size: 0.9rem;
-          color: #333;
-          
-          &:first-child {
-            text-align: center;
-            font-weight: 600;
-          }
+        &.p-button-info:hover {
+          background-color: #e7f1ff !important;
+          border-color: #007bff !important;
         }
       }
     }
   }
 
-  .percentage-input {
-    width: 70px;
-    padding: 6px 8px;
-    border: 1px solid #ddd;
-    border-radius: 4px;
-    text-align: center;
-    font-size: 0.9rem;
-    
-    &:focus {
-      outline: none;
-      border-color: #1361B9;
-      box-shadow: 0 0 0 2px rgba(19, 97, 185, 0.1);
-    }
-  }
-
-  .actions-cell {
-    text-align: center;
-    
-    .btn-delete,
-    .btn-edit-beneficiario {
-      background: none;
-      border: none;
-      padding: 6px 8px;
-      margin: 0 2px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 1rem;
-      transition: background-color 0.2s ease;
-      
-      &.btn-delete:hover {
-        background-color: #fee;
-        color: #dc3545;
-      }
-      
-      &.btn-edit-beneficiario:hover {
-        background-color: #e3f2fd;
-        color: #1976d2;
-      }
-    }
-  }
 
   // Efectos de transición fade para sección superior
   .fade-enter-active,
@@ -1985,12 +2012,31 @@ export default defineComponent({
     .beneficiarios-table {
       font-size: 0.8rem;
       
-      table {
+      :deep(.p-datatable) {
         min-width: 600px;
+        
+        .p-datatable-thead > tr > th,
+        .p-datatable-tbody > tr > td {
+          padding: 8px 6px !important;
+          font-size: 0.8rem !important;
+        }
       }
       
-      th, td {
-        padding: 8px 6px;
+      :deep(.percentage-input-prime) {
+        width: 60px;
+        
+        .p-inputnumber-input {
+          font-size: 0.75rem;
+          padding: 4px 6px;
+        }
+      }
+      
+      .actions-cell {
+        :deep(.p-button) {
+          width: 28px;
+          height: 28px;
+          font-size: 0.8rem;
+        }
       }
     }
     

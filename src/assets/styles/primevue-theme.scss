@@ -1,12 +1,23 @@
 // Tema personalizado para PrimeVue con variables del proyecto
-// Sobrescribir variables CSS de PrimeVue con nuestros colores corporativos
+// Sobrescribir variables CSS de PrimeVue lara-light-blue con nuestros colores corporativos
 
 :root {
-  // Colores principales del proyecto
-  --primary-color: #0855C4;
-  --primary-color-text: #ffffff;
+  // Sobrescribir variables de PrimeVue para usar nuestros colores
+  --p-primary-color: #0855C4;
+  --p-primary-contrast-color: #ffffff;
+  --p-primary-50: #f0f7ff;
+  --p-primary-100: #e0efff;
+  --p-primary-200: #b8dcff;
+  --p-primary-300: #78bfff;
+  --p-primary-400: #309aff;
+  --p-primary-500: #0855C4;
+  --p-primary-600: #073f9a;
+  --p-primary-700: #073f9a;
+  --p-primary-800: #073f9a;
+  --p-primary-900: #073f9a;
+  --p-primary-950: #073f9a;
   
-  // Surface colors
+  // Surface colors (mantener compatibilidad)
   --surface-0: var(--color-white, #ffffff);
   --surface-50: var(--color-gray-light, #f8f9fa);
   --surface-100: #f1f3f4;
